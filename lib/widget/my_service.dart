@@ -72,7 +72,7 @@ class _MyServiceState extends State<MyService> {
       subtitle: const Text('Show all Time Slot'),
       onTap: () {
         setState(() {
-          currentWidget = homePage();
+          currentWidget = const ShowTimeAndType();
         });
         Navigator.pop(context);
       },
