@@ -1,3 +1,4 @@
+import 'package:cyc_test/utility/dialog.dart';
 import 'package:cyc_test/utility/my_constant.dart';
 import 'package:cyc_test/widget/show_choose_time.dart';
 import 'package:cyc_test/widget/show_image.dart';
@@ -25,10 +26,17 @@ class _ShowTimeAndTypeState extends State<ShowTimeAndType> {
   void initState() {
     super.initState();
     dateTime = DateTime.now();
-    DateFormat dateFormat = DateFormat('dd-MMM-yyyy');
-    dateTimeStr = dateFormat.format(dateTime!);
+
+    changeDateToString();
+
     listTimeServices.add(MyConstant.timeServiceMotos);
     listTimeServices.add(MyConstant.timeServiceCars);
+  }
+
+  void changeDateToString() {
+    DateFormat dateFormat = DateFormat('dd-MMM-yyyy');
+    dateTimeStr = dateFormat.format(dateTime!);
+    print('dateTimeStr ==> $dateTimeStr');
   }
 
   @override
@@ -42,7 +50,57 @@ class _ShowTimeAndTypeState extends State<ShowTimeAndType> {
               newImage(constaraints),
               newSubTitle(),
               newRadioGroup(),
-              newTitle(dateTimeStr!),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      print(
+                          'diff ลดวัน ${dateTime!.difference(DateTime.now()).inDays}');
+                      if (dateTime!.difference(DateTime.now()).inDays <= 0) {
+                        setState(() {
+                          dateTime = DateTime.now();
+                        });
+                        changeDateToString();
+                        normalDialog(context, 'ไม่สามารถ กลับไปหลังวันนี่ได้');
+                      } else {
+                        setState(() {
+                          dateTime = DateTime.utc(
+                            dateTime!.year,
+                            dateTime!.month,
+                            dateTime!.day - 1,
+                          );
+
+                          changeDateToString();
+                        });
+                      }
+                    },
+                    icon: const Icon(Icons.arrow_back),
+                  ),
+                  newTitle(dateTimeStr!),
+                  IconButton(
+                    onPressed: () {
+                      print(
+                          'diff เพิ่มวัน ${dateTime!.difference(DateTime.now()).inDays}');
+                      if (dateTime!.difference(DateTime.now()).inDays >= 7) {
+                        normalDialog(
+                            context, 'ไม่สามารถ จองล่วงหน้า เกิน 7 วันได้ คะ');
+                      } else {
+                        setState(() {
+                          dateTime = DateTime.utc(
+                            dateTime!.year,
+                            dateTime!.month,
+                            dateTime!.day + 1,
+                          );
+
+                          changeDateToString();
+                        });
+                      }
+                    },
+                    icon: const Icon(Icons.arrow_forward),
+                  ),
+                ],
+              ),
               newChooseTimeService(),
               newReserve(constaraints),
             ],
