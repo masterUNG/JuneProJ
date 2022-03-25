@@ -1,6 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cyc_test/models/time_service_model.dart';
 import 'package:cyc_test/utility/dialog.dart';
 import 'package:cyc_test/utility/my_constant.dart';
-import 'package:cyc_test/widget/show_choose_time.dart';
 import 'package:cyc_test/widget/show_image.dart';
 import 'package:cyc_test/widget/show_text.dart';
 import 'package:flutter/material.dart';
@@ -25,12 +26,51 @@ class _ShowTimeAndTypeState extends State<ShowTimeAndType> {
   @override
   void initState() {
     super.initState();
-    dateTime = DateTime.now();
 
+    dateTime = DateTime.now();
     changeDateToString();
+
+    readOrCreateTimeService();
 
     listTimeServices.add(MyConstant.timeServiceMotos);
     listTimeServices.add(MyConstant.timeServiceCars);
+  }
+
+  Future<void> readOrCreateTimeService() async {
+    await FirebaseFirestore.instance
+        .collection('timeService')
+        .doc(dateTimeStr)
+        .get()
+        .then((value) async {
+      print('value read timeService ==> at $dateTimeStr == ${value.data()}');
+
+      if (value.data() == null) {
+        var carServices = <String>[];
+        for (var item in MyConstant.timeServiceCars) {
+          carServices.add('');
+        }
+
+        var motoServices = <String>[];
+        for (var item in MyConstant.timeServiceMotos) {
+          motoServices.add('');
+        }
+
+        TimeServiceModel timeServiceModel = TimeServiceModel(
+            carService: carServices,
+            motoService: motoServices,
+            workDate: Timestamp.fromDate(dateTime!));
+
+        await FirebaseFirestore.instance
+            .collection('timeService')
+            .doc(dateTimeStr)
+            .set(timeServiceModel.toMap())
+            .then((value) {
+          print('Add Doc $dateTimeStr Success');
+        });
+      } else {
+        print('Have doc => $dateTimeStr');
+      }
+    });
   }
 
   void changeDateToString() {
