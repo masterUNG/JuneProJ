@@ -2,7 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cyc_test/models/time_service_model.dart';
 import 'package:cyc_test/utility/dialog.dart';
 import 'package:cyc_test/utility/my_constant.dart';
+import 'package:cyc_test/widget/process_receive.dart';
 import 'package:cyc_test/widget/show_image.dart';
+import 'package:cyc_test/widget/show_progress.dart';
 import 'package:cyc_test/widget/show_text.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -22,6 +24,10 @@ class _ShowTimeAndTypeState extends State<ShowTimeAndType> {
   String? dateTimeStr;
 
   var listTimeServices = <List<String>>[];
+  TimeServiceModel? timeServiceModel;
+  var listTimeServiceFireabases = <List<String>>[];
+
+  bool load = true;
 
   @override
   void initState() {
@@ -37,13 +43,15 @@ class _ShowTimeAndTypeState extends State<ShowTimeAndType> {
   }
 
   Future<void> readOrCreateTimeService() async {
+    if (listTimeServiceFireabases.isNotEmpty) {
+      listTimeServiceFireabases.clear();
+    }
+
     await FirebaseFirestore.instance
         .collection('timeService')
         .doc(dateTimeStr)
         .get()
         .then((value) async {
-      print('value read timeService ==> at $dateTimeStr == ${value.data()}');
-
       if (value.data() == null) {
         var carServices = <String>[];
         for (var item in MyConstant.timeServiceCars) {
@@ -68,7 +76,14 @@ class _ShowTimeAndTypeState extends State<ShowTimeAndType> {
           print('Add Doc $dateTimeStr Success');
         });
       } else {
-        print('Have doc => $dateTimeStr');
+        setState(() {
+          timeServiceModel = TimeServiceModel.fromMap(value.data()!);
+          listTimeServiceFireabases.add(timeServiceModel!.motoService);
+          listTimeServiceFireabases.add(timeServiceModel!.carService);
+          load = false;
+          print(
+              '#25mar listTimeFirebase moto ===> ${listTimeServiceFireabases}');
+        });
       }
     });
   }
@@ -90,63 +105,66 @@ class _ShowTimeAndTypeState extends State<ShowTimeAndType> {
               newImage(constaraints),
               newSubTitle(),
               newRadioGroup(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  IconButton(
-                    onPressed: () {
-                      print(
-                          'diff ลดวัน ${dateTime!.difference(DateTime.now()).inDays}');
-                      if (dateTime!.difference(DateTime.now()).inDays <= 0) {
-                        setState(() {
-                          dateTime = DateTime.now();
-                        });
-                        changeDateToString();
-                        normalDialog(context, 'ไม่สามารถ กลับไปหลังวันนี่ได้');
-                      } else {
-                        setState(() {
-                          dateTime = DateTime.utc(
-                            dateTime!.year,
-                            dateTime!.month,
-                            dateTime!.day - 1,
-                          );
-
-                          changeDateToString();
-                        });
-                      }
-                    },
-                    icon: const Icon(Icons.arrow_back),
-                  ),
-                  newTitle(dateTimeStr!),
-                  IconButton(
-                    onPressed: () {
-                      print(
-                          'diff เพิ่มวัน ${dateTime!.difference(DateTime.now()).inDays}');
-                      if (dateTime!.difference(DateTime.now()).inDays >= 7) {
-                        normalDialog(
-                            context, 'ไม่สามารถ จองล่วงหน้า เกิน 7 วันได้ คะ');
-                      } else {
-                        setState(() {
-                          dateTime = DateTime.utc(
-                            dateTime!.year,
-                            dateTime!.month,
-                            dateTime!.day + 1,
-                          );
-
-                          changeDateToString();
-                        });
-                      }
-                    },
-                    icon: const Icon(Icons.arrow_forward),
-                  ),
-                ],
-              ),
-              newChooseTimeService(),
+              newShowDate(context),
+              load ? const ShowProgress() : newChooseTimeService(),
               newReserve(constaraints),
             ],
           ),
         );
       }),
+    );
+  }
+
+  Row newShowDate(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        IconButton(
+          onPressed: () {
+            print('diff ลดวัน ${dateTime!.difference(DateTime.now()).inDays}');
+            if (dateTime!.difference(DateTime.now()).inDays <= 0) {
+              setState(() {
+                dateTime = DateTime.now();
+              });
+              changeDateToString();
+              normalDialog(context, 'ไม่สามารถ กลับไปหลังวันนี่ได้');
+              readOrCreateTimeService();
+            } else {
+              setState(() {
+                dateTime = DateTime.utc(
+                  dateTime!.year,
+                  dateTime!.month,
+                  dateTime!.day - 1,
+                );
+                changeDateToString();
+                readOrCreateTimeService();
+              });
+            }
+          },
+          icon: const Icon(Icons.arrow_back),
+        ),
+        newTitle(dateTimeStr!),
+        IconButton(
+          onPressed: () {
+            print(
+                'diff เพิ่มวัน ${dateTime!.difference(DateTime.now()).inDays}');
+            if (dateTime!.difference(DateTime.now()).inDays >= 7) {
+              normalDialog(context, 'ไม่สามารถ จองล่วงหน้า เกิน 7 วันได้ คะ');
+            } else {
+              setState(() {
+                dateTime = DateTime.utc(
+                  dateTime!.year,
+                  dateTime!.month,
+                  dateTime!.day + 1,
+                );
+                changeDateToString();
+                readOrCreateTimeService();
+              });
+            }
+          },
+          icon: const Icon(Icons.arrow_forward),
+        ),
+      ],
     );
   }
 
@@ -174,16 +192,39 @@ class _ShowTimeAndTypeState extends State<ShowTimeAndType> {
           crossAxisSpacing: 16,
           mainAxisExtent: 60,
         ),
-        itemBuilder: (context, index) => Container(
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            // color: Colors.pink,
-            border: Border.all(),
-            borderRadius: BorderRadius.circular(15),
-          ),
-          child: ShowText(
-            label: listTimeServices[indexWidget][index],
-            textStyle: MyConstant().h2Style(),
+        itemBuilder: (context, index) => InkWell(
+          onTap: () {
+            if (listTimeServiceFireabases[indexWidget][index].isEmpty) {
+              // listTimeServiceFireabases[indexWidget][index] = 'aa';
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProcessReceive(
+                    indexType: indexWidget,
+                    dateTimeStr: dateTimeStr!,
+                    timeWork: listTimeServices[indexWidget][index],
+                    dateTime: dateTime!, index: index, strings: listTimeServiceFireabases[indexWidget],
+                  ),
+                ),
+              ).then((value) => readOrCreateTimeService());
+            } else {
+              normalDialog(context, 'เวลานี่ไม่ ว่าง คะ');
+            }
+          },
+          child: Container(
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: listTimeServiceFireabases[indexWidget][index].isEmpty
+                  ? Colors.white
+                  : Colors.pink,
+              border: Border.all(),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: ShowText(
+              label: listTimeServices[indexWidget][index],
+              textStyle: MyConstant().h2Style(),
+            ),
           ),
         ),
       ),

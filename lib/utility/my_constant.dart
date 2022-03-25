@@ -18,8 +18,6 @@ class MyConstant {
     '15:00',
     '16:00',
     '17:00',
-    '18:00',
-    '19:30',
   ];
 
   static var timeServiceMotos = <String>[
@@ -41,12 +39,6 @@ class MyConstant {
     '15:30',
     '16:00',
     '16:30',
-    '17:00',
-    '17:30',
-    '18:00',
-    '18:30',
-    '19:00',
-    '19:30',
   ];
 
   TextStyle h1Style() => TextStyle(
@@ -59,6 +51,12 @@ class MyConstant {
         color: textColor,
         fontSize: 18,
         fontWeight: FontWeight.w700,
+      );
+
+      TextStyle h2blueStyle() => const TextStyle(
+        color: Colors.blue,
+        fontSize: 18,
+        fontWeight: FontWeight.w400,
       );
 
   TextStyle h3Style() => TextStyle(

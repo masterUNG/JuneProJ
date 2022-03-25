@@ -17,15 +17,15 @@ class TimeServiceModel {
     return <String, dynamic>{
       'carService': carService,
       'motoService': motoService,
-      'workDate': workDate,
+      'workdate': workDate,
     };
   }
 
   factory TimeServiceModel.fromMap(Map<String, dynamic> map) {
     return TimeServiceModel(
-      carService: List<String>.from((map['carService'] ?? const <String>[]) as List<String>),
-      motoService: List<String>.from((map['motoService'] ?? const <String>[]) as List<String>),
-      workDate: (map['workDate']),
+      carService: List<String>.from((map['carService'] ?? const <String>[])),
+      motoService: List<String>.from((map['motoService'] ?? const <String>[])),
+      workDate: (map['workdate']),
     );
   }
 

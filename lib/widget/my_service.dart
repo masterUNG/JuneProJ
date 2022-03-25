@@ -2,6 +2,7 @@ import 'package:cyc_test/utility/my_style.dart';
 import 'package:cyc_test/widget/address.dart';
 import 'package:cyc_test/widget/information_login.dart';
 import 'package:cyc_test/widget/home_screen.dart';
+import 'package:cyc_test/widget/show_list_receive.dart';
 import 'package:cyc_test/widget/show_time_and_type.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -55,6 +56,7 @@ class _MyServiceState extends State<MyService> {
             children: [
               bildUserAccountsDrawerHeader(),
               buildShowallTimeSlot(),
+              menuShowReceive(),
               buildListTitleInformation(),
               buildListTitleAddress(),
             ],
@@ -73,6 +75,20 @@ class _MyServiceState extends State<MyService> {
       onTap: () {
         setState(() {
           currentWidget = const ShowTimeAndType();
+        });
+        Navigator.pop(context);
+      },
+    );
+  }
+
+  ListTile menuShowReceive() {
+    return ListTile(
+      leading: const Icon(Icons.receipt),
+      title: const Text('Receive'),
+      subtitle: const Text('Display all Revcive'),
+      onTap: () {
+        setState(() {
+          currentWidget = const ShowListReceive();
         });
         Navigator.pop(context);
       },
